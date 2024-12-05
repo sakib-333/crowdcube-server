@@ -33,6 +33,14 @@ async function run() {
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
+
+    const database = client.db("campaigns_db");
+    const campaignCollections = database.collection("campaignCollections");
+
+    app.post("/addCampaign", async (req, res) => {
+      const result = await campaignCollections.insertOne(req.body);
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
