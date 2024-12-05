@@ -101,6 +101,16 @@ async function run() {
       res.send(result);
     });
     // Update my campaign end
+
+    // Delete my campaign start
+    app.delete("/myCampaign/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const result = await campaignCollections.deleteOne(query);
+
+      res.send(result);
+    });
+    // Delete my campaign end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
