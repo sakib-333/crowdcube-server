@@ -67,7 +67,6 @@ async function run() {
     // Get all of my campaigns start
     app.post("/myCampaign", async (req, res) => {
       const { email } = req.body;
-      console.log(email);
       const query = { userEmail: email };
       const cursor = campaignCollections.find(query);
       const result = await cursor.toArray();
@@ -75,6 +74,33 @@ async function run() {
       res.send(result);
     });
     // Get all of my campaigns end
+
+    // Update my campaign start
+    app.post("/updateCampaign/:id", async (req, res) => {
+      const { id } = req.params;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          imageURL: req.body.imageURL,
+          campaignTitle: req.body.campaignTitle,
+          campaignType: req.body.campaignType,
+          description: req.body.description,
+          minimumDonation: req.body.minimumDonation,
+          deadline: req.body.deadline,
+          userEmail: req.body.userEmail,
+          userName: req.body.userName,
+        },
+      };
+      const result = await campaignCollections.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+
+      res.send(result);
+    });
+    // Update my campaign end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
