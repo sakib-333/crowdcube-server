@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -53,6 +53,16 @@ async function run() {
       res.send(result);
     });
     // Get all campaigns end
+
+    // Get a signle campaign start
+    app.get("/campaign/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const campaign = await campaignCollections.findOne(query);
+
+      res.send(campaign);
+    });
+    // Get a signle campaign end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
