@@ -63,6 +63,18 @@ async function run() {
       res.send(campaign);
     });
     // Get a signle campaign end
+
+    // Get all of my campaigns start
+    app.post("/myCampaign", async (req, res) => {
+      const { email } = req.body;
+      console.log(email);
+      const query = { userEmail: email };
+      const cursor = campaignCollections.find(query);
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
+    // Get all of my campaigns end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
