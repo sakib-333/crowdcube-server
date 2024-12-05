@@ -34,13 +34,25 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
+    // Creating database
     const database = client.db("campaigns_db");
     const campaignCollections = database.collection("campaignCollections");
 
+    // Add new campaign start
     app.post("/addCampaign", async (req, res) => {
       const result = await campaignCollections.insertOne(req.body);
       res.send(result);
     });
+    // Add new campaign end
+
+    // Get all campaigns start
+    app.get("/allCampaign", async (req, res) => {
+      const cursor = campaignCollections.find();
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
+    // Get all campaigns end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
