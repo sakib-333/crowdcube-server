@@ -115,11 +115,22 @@ async function run() {
 
     // My donations start
     app.post("/myDonations", async (req, res) => {
-      console.log(req.body);
       const result = await donatedCollections.insertOne(req.body);
       res.send(result);
     });
+
     // My donations end
+
+    // Get all of my donations start
+    app.post("/myDonations/:userEmail", async (req, res) => {
+      const { userEmail } = req.params;
+      const query = { donorEmail: userEmail };
+      const cursor = donatedCollections.find(query);
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
+    // Get all of my donations end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
