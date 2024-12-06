@@ -37,6 +37,7 @@ async function run() {
     // Creating database
     const database = client.db("campaigns_db");
     const campaignCollections = database.collection("campaignCollections");
+    const donatedCollections = database.collection("donatedCollections");
 
     // Add new campaign start
     app.post("/addCampaign", async (req, res) => {
@@ -111,6 +112,14 @@ async function run() {
       res.send(result);
     });
     // Delete my campaign end
+
+    // My donations start
+    app.post("/myDonations", async (req, res) => {
+      console.log(req.body);
+      const result = await donatedCollections.insertOne(req.body);
+      res.send(result);
+    });
+    // My donations end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
