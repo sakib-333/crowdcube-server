@@ -131,6 +131,22 @@ async function run() {
       res.send(result);
     });
     // Get all of my donations end
+
+    // Get currently running campaigns start
+    app.get("/currently-running-campaigns", async (req, res) => {
+      const cursor = campaignCollections.find();
+      const result = await cursor.toArray();
+      const today = new Date();
+      const runningCampaigns = result.filter((campaign) => {
+        const date = new Date(campaign.deadline);
+        if (today <= date) {
+          return campaign;
+        }
+      });
+
+      res.send(runningCampaigns);
+    });
+    // Get currently running campaigns end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
