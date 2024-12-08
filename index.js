@@ -1,7 +1,7 @@
+require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
 
 const app = express();
 
@@ -27,9 +27,9 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
@@ -147,6 +147,17 @@ async function run() {
       res.send(runningCampaigns);
     });
     // Get currently running campaigns end
+
+    // Sort campaigns by donations start
+    app.get("/sort-campaigns", async (req, res) => {
+      const query = {};
+      const sort = { minimumDonation: 1 };
+      const cursor = campaignCollections.find(query).sort(sort);
+      const data = await cursor.toArray();
+
+      res.send(data);
+    });
+    // Sort campaigns by donations end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
