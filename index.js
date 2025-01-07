@@ -170,7 +170,7 @@ async function run() {
     // Delete my campaign end
 
     // My donations start
-    app.post("/myDonations", verifyToken, verifyUser, async (req, res) => {
+    app.post("/addMyDonations", verifyToken, verifyUser, async (req, res) => {
       const result = await donatedCollections.insertOne(req.body);
       res.send(result);
     });
@@ -178,9 +178,9 @@ async function run() {
     // My donations end
 
     // Get all of my donations start
-    app.post("/myDonations/:userEmail", verifyUser, async (req, res) => {
-      const { userEmail } = req.params;
-      const query = { donorEmail: userEmail };
+    app.post("/getMyDonations", verifyToken, verifyUser, async (req, res) => {
+      const { email } = req.body;
+      const query = { donorEmail: email };
       const cursor = donatedCollections.find(query);
       const result = await cursor.toArray();
 
