@@ -2,11 +2,42 @@ require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
+
+const verifyToken = (req, res, next) => {
+  const token = req.cookies["ph_b10_a10"];
+  if (!token) {
+    return res.status(401).send("Access Denied");
+  }
+
+  try {
+    const verified = jwt.verify(token, process.env.PRIVATE_KEY);
+    req.user = verified;
+    next();
+  } catch (err) {
+    res.status(400).send("Invalid Token");
+  }
+};
+
+const verifyUser = (req, res, next) => {
+  const { email } = req.body;
+  if (email !== req.user.email) {
+    return res.status(401).send("Access Denied");
+  }
+  next();
+};
 
 const port = process.env.PORT || 3000;
 
@@ -26,21 +57,37 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
-    // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-
     // Creating database
     const database = client.db("campaigns_db");
     const campaignCollections = database.collection("campaignCollections");
     const donatedCollections = database.collection("donatedCollections");
 
+    // Auth api start
+    app.post("/jwt", async (req, res) => {
+      const { email } = req.body;
+      const token = jwt.sign({ email }, process.env.PRIVATE_KEY, {
+        expiresIn: "1h",
+      });
+      res.cookie("ph_b10_a10", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      });
+      res.send({ acknowledgement: true, status: "cookie created" });
+    });
+
+    app.post("/logout", (req, res) => {
+      res.clearCookie("ph_b10_a10", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      });
+      res.send({ acknowledgement: true, status: "cookie deleted" });
+    });
+    // Auth api end
+
     // Add new campaign start
-    app.post("/addCampaign", async (req, res) => {
+    app.post("/addCampaign", verifyToken, verifyUser, async (req, res) => {
       const result = await campaignCollections.insertOne(req.body);
       res.send(result);
     });
@@ -56,7 +103,7 @@ async function run() {
     // Get all campaigns end
 
     // Get a signle campaign start
-    app.get("/campaign/:id", async (req, res) => {
+    app.get("/campaign/:id", verifyToken, async (req, res) => {
       const { id } = req.params;
       const query = { _id: new ObjectId(id) };
       const campaign = await campaignCollections.findOne(query);
@@ -66,7 +113,7 @@ async function run() {
     // Get a signle campaign end
 
     // Get all of my campaigns start
-    app.post("/myCampaign", async (req, res) => {
+    app.post("/myCampaign", verifyToken, verifyUser, async (req, res) => {
       const { email } = req.body;
       const query = { userEmail: email };
       const cursor = campaignCollections.find(query);
@@ -77,34 +124,39 @@ async function run() {
     // Get all of my campaigns end
 
     // Update my campaign start
-    app.post("/updateCampaign/:id", async (req, res) => {
-      const { id } = req.params;
-      const filter = { _id: new ObjectId(id) };
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: {
-          imageURL: req.body.imageURL,
-          campaignTitle: req.body.campaignTitle,
-          campaignType: req.body.campaignType,
-          description: req.body.description,
-          minimumDonation: req.body.minimumDonation,
-          deadline: req.body.deadline,
-          userEmail: req.body.userEmail,
-          userName: req.body.userName,
-        },
-      };
-      const result = await campaignCollections.updateOne(
-        filter,
-        updateDoc,
-        options
-      );
+    app.post(
+      "/updateCampaign/:id",
+      verifyToken,
+      verifyUser,
+      async (req, res) => {
+        const { id } = req.params;
+        const filter = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: {
+            imageURL: req.body.imageURL,
+            campaignTitle: req.body.campaignTitle,
+            campaignType: req.body.campaignType,
+            description: req.body.description,
+            minimumDonation: req.body.minimumDonation,
+            deadline: req.body.deadline,
+            userEmail: req.body.userEmail,
+            userName: req.body.userName,
+          },
+        };
+        const result = await campaignCollections.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
 
-      res.send(result);
-    });
+        res.send(result);
+      }
+    );
     // Update my campaign end
 
     // Delete my campaign start
-    app.delete("/myCampaign/:id", async (req, res) => {
+    app.delete("/myCampaign/:id", verifyToken, verifyUser, async (req, res) => {
       const { id } = req.params;
       const query = { _id: new ObjectId(id) };
       const result = await campaignCollections.deleteOne(query);
@@ -114,7 +166,7 @@ async function run() {
     // Delete my campaign end
 
     // My donations start
-    app.post("/myDonations", async (req, res) => {
+    app.post("/myDonations", verifyToken, verifyUser, async (req, res) => {
       const result = await donatedCollections.insertOne(req.body);
       res.send(result);
     });
@@ -122,7 +174,7 @@ async function run() {
     // My donations end
 
     // Get all of my donations start
-    app.post("/myDonations/:userEmail", async (req, res) => {
+    app.post("/myDonations/:userEmail", verifyUser, async (req, res) => {
       const { userEmail } = req.params;
       const query = { donorEmail: userEmail };
       const cursor = donatedCollections.find(query);
