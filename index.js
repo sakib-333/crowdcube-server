@@ -92,7 +92,7 @@ async function run() {
 
     // Add new campaign start
     app.post("/addCampaign", verifyToken, verifyUser, async (req, res) => {
-      const result = await campaignCollections.insertOne(req.body);
+      const result = await campaignCollections.insertOne(req.body?.newCampaign);
       res.send(result);
     });
     // Add new campaign end
