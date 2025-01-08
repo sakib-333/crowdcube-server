@@ -134,18 +134,19 @@ async function run() {
       verifyUser,
       async (req, res) => {
         const { id } = req.params;
+        const { updatedCampaign } = req.body;
         const filter = { _id: new ObjectId(id) };
         const options = { upsert: true };
         const updateDoc = {
           $set: {
-            imageURL: req.body.imageURL,
-            campaignTitle: req.body.campaignTitle,
-            campaignType: req.body.campaignType,
-            description: req.body.description,
-            minimumDonation: req.body.minimumDonation,
-            deadline: req.body.deadline,
-            userEmail: req.body.userEmail,
-            userName: req.body.userName,
+            imageURL: updatedCampaign.imageURL,
+            campaignTitle: updatedCampaign.campaignTitle,
+            campaignType: updatedCampaign.campaignType,
+            description: updatedCampaign.description,
+            minimumDonation: updatedCampaign.minimumDonation,
+            deadline: updatedCampaign.deadline,
+            userEmail: updatedCampaign.userEmail,
+            userName: updatedCampaign.userName,
           },
         };
         const result = await campaignCollections.updateOne(
