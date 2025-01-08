@@ -99,7 +99,16 @@ async function run() {
 
     // Get all campaigns start
     app.get("/allCampaign", async (req, res) => {
-      const cursor = campaignCollections.find();
+      const { sortBy } = req?.body;
+      const query = {};
+
+      if (sortBy == "ascending") {
+        query["minimumDonation"] = 1;
+      } else if (sortBy == "descending") {
+        query["minimumDonation"] = -1;
+      }
+
+      const cursor = campaignCollections.find().sort(query);
       const result = await cursor.toArray();
 
       res.send(result);
@@ -204,17 +213,6 @@ async function run() {
       res.send(runningCampaigns);
     });
     // Get currently running campaigns end
-
-    // Sort campaigns by donations start
-    app.get("/sort-campaigns", async (req, res) => {
-      const query = {};
-      const sort = { minimumDonation: 1 };
-      const cursor = campaignCollections.find(query).sort(sort);
-      const data = await cursor.toArray();
-
-      res.send(data);
-    });
-    // Sort campaigns by donations end
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
