@@ -170,7 +170,7 @@ async function run() {
     // Delete my campaign end
 
     // My donations start
-    app.post("/addMyDonations", verifyToken, verifyUser, async (req, res) => {
+    app.post("/addMyDonations", verifyToken, async (req, res) => {
       const result = await donatedCollections.insertOne(req.body);
       res.send(result);
     });
