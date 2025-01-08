@@ -98,7 +98,7 @@ async function run() {
     // Add new campaign end
 
     // Get all campaigns start
-    app.get("/allCampaign", async (req, res) => {
+    app.post("/allCampaign", async (req, res) => {
       const { sortBy } = req?.body;
       const query = {};
 
